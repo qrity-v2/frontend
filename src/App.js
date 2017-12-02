@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
-import CheckableTag from 'antd/lib/tag/CheckableTag' // optimize
+import queryString from 'query-string'
+import CheckableTag from 'antd/lib/tag/CheckableTag'
+import Spin from 'antd/lib/spin'
 import Stars from 'react-stars'
 import status from './utils/status'
 import json from './utils/json'
@@ -11,7 +13,8 @@ export default class App extends Component {
     tags_good: [],
     tags_good_selected: [],
     tags_bad: [],
-    tags_bad_selected: []
+    tags_bad_selected: [],
+    loading: false
   }
 
   ratingChange = (stars) => {
@@ -43,15 +46,46 @@ export default class App extends Component {
     }
   }
 
-  send = () => {
-    // Send form to API
+  send = async () => {
+    const {
+      stars: rating,
+      tags_bad_selected,
+      tags_good_selected
+    } = this.state
+
+    try {
+      const { result } = await fetch('/review/', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: queryString.stringify({
+          shop_id: 1,
+          user_id: 1,
+          rating,
+          tags: rating > 3 ? tags_good_selected : tags_bad_selected
+        })
+      }).then(status).then(json)
+
+      if (result === 'ok') {
+        // notification that all okay (maybe redirect...)
+        alert('Good!')
+      } else {
+        alert('Error!')
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   async componentWillMount () {
-    try {
-      const { result } = await fetch('/review/params/').then(status).then(json)
+    this.setState({ loading: true })
 
-      this.setState({ ...result })
+    try {
+      const { result } = await fetch('/review/params/')
+        .then(status).then(json)
+
+      this.setState({ ...result, loading: false })
     } catch (err) {
       console.error(err)
     }
@@ -64,8 +98,24 @@ export default class App extends Component {
       tags_good,
       tags_good_selected,
       tags_bad,
-      tags_bad_selected
+      tags_bad_selected,
+      loading
     } = this.state
+
+    if (loading) {
+      return (
+        <div
+          style={{
+            height: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <Spin />
+        </div>
+      )
+    }
 
     return (
       <div
