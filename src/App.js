@@ -17,7 +17,9 @@ export default class App extends Component {
     tags_bad: [],
     tags_bad_selected: [],
     loading: false,
-    bad_request: false
+    bad_request: false,
+    success: false,
+    error: false
   }
 
   ratingChange = (stars) => {
@@ -72,12 +74,9 @@ export default class App extends Component {
         })
       }).then(status).then(json)
 
-      if (result === 'ok') {
-        // notification that all okay (maybe redirect...)
-        alert('Good!')
-      } else {
-        alert('Error!')
-      }
+      this.setState({
+        [result === 'ok' ? 'success' : 'error']: true
+      })
     } catch (err) {
       console.error(err)
     }
@@ -117,10 +116,12 @@ export default class App extends Component {
       tags_bad,
       tags_bad_selected,
       loading,
-      bad_request
+      bad_request,
+      success,
+      error
     } = this.state
 
-    if (bad_request) {
+    if (bad_request || success || error || loading) {
       return (
         <div
           style={{
@@ -130,22 +131,19 @@ export default class App extends Component {
             justifyContent: 'center'
           }}
         >
-          <h1>
-            Не был передан shop_id & user_id.
-          </h1>
-        </div>
-      )
-    } else if (loading) {
-      return (
-        <div
-          style={{
-            height: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <Spin />
+          {
+            (() => {
+              if (bad_request) {
+                return <h1>Не найдено.</h1>
+              } else if (success) {
+                return <h1>Отзыв отправлен.</h1>
+              } else if (error) {
+                return <h1>Произошла ошибка.</h1>
+              } else if (loading) {
+                return <Spin />
+              }
+            })()
+          }
         </div>
       )
     }
