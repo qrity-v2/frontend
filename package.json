@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
-  "proxy": "http://78.155.199.101:5000",
+  "proxy": "http://78.155.199.101",
   "dependencies": {
     "antd": "^2.13.10",
     "query-string": "^5.0.1",
