@@ -1,16 +1,17 @@
 import React, { Component } from 'react'
-import queryString from 'query-string'
 import CheckableTag from 'antd/lib/tag/CheckableTag' // optimize
-import TextArea from 'antd/lib/input/TextArea' // optimize
 import Stars from 'react-stars'
+import status from './utils/status'
+import json from './utils/json'
 
-class App extends Component {
+export default class App extends Component {
   state = {
-    name: '',
+    shop_name: '',
     stars: 0,
-    tags: [],
-    selectedTags: [],
-    comment: ''
+    tags_good: [],
+    tags_good_selected: [],
+    tags_bad: [],
+    tags_bad_selected: []
   }
 
   ratingChange = (stars) => {
@@ -21,57 +22,50 @@ class App extends Component {
     }
   }
 
-  tagChange = (checked, tag) => {
-    const { selectedTags } = this.state
+  tagChange = (checked, tag, type) => {
+    const { [`tags_${type}_selected`]: selected } = this.state
 
     if (checked) {
       this.setState({
-        selectedTags: [
-          ...selectedTags,
+        [ `tags_${type}_selected` ]: [
+          ...selected,
           tag
         ]
       })
     } else {
-      this.setState(({ selectedTags }) => {
-        const index = selectedTags.indexOf(tag)
-
-        selectedTags.splice(index, 1)
+      this.setState(({ [`tags_${type}_selected`]: selected }) => {
+        selected.splice(selected.indexOf(tag), 1)
 
         return {
-          selectedTags
+          [`tags_${type}_selected`]: selected
         }
       })
     }
-  }
-
-  textareaChange = ({ target }) => {
-    const { value: comment } = target
-
-    this.setState({ comment })
   }
 
   send = () => {
     // Send form to API
   }
 
-  componentWillMount () {
-    const query = Object.entries(queryString.parse(window.location.search))
+  async componentWillMount () {
+    try {
+      const { result } = await fetch('/review/params/').then(status).then(json)
 
-    if (!query.length) {
-      return false
+      this.setState({ ...result })
+    } catch (err) {
+      console.error(err)
     }
-
-    // DEMO [only]
-    const state = Object.entries(queryString.parse(window.location.search))
-      .filter(([ key, value ]) => [ 'tags', 'name' ].indexOf(key) > -1 && value !== undefined)
-      .map(([ key, value ]) => ({ [key]: value }))
-      .reduce((a, b) => ({ ...a, ...b }))
-
-    this.setState({ ...state })
   }
 
   render () {
-    const { name, stars, tags, selectedTags } = this.state
+    const {
+      shop_name,
+      stars,
+      tags_good,
+      tags_good_selected,
+      tags_bad,
+      tags_bad_selected
+    } = this.state
 
     return (
       <div
@@ -89,7 +83,7 @@ class App extends Component {
             textAlign: 'center'
           }}
         >
-          Отзыв о {name ? `«${name}»` : 'заведении'}
+          Отзыв о {shop_name ? `«${shop_name}»` : 'заведении'}
         </h1>
 
         <Stars
@@ -111,52 +105,33 @@ class App extends Component {
           }}
         >
           {
-            stars > 0 && stars < 4 && tags.map((tag, i) => {
-              return (
-                <CheckableTag
-                  key={i}
-                  style={{
-                    height: 'auto',
-                    fontSize: 15,
-                    padding: '7px 19px',
-                    margin: 5,
-                    color: selectedTags.indexOf(tag) === -1 && 'rgba(0, 0, 0, 0.65)',
-                    background: selectedTags.indexOf(tag) === -1 && '#eee'
-                  }}
-                  checked={selectedTags.indexOf(tag) > -1}
-                  onChange={(checked) => this.tagChange(checked, tag)}
-                >
-                  {tag}
-                </CheckableTag>
-              )
-            })
+            (() => {
+              if (stars === 0) {
+                return false
+              }
+
+              return (stars > 3 ? tags_good : tags_bad).map((tag, i) => {
+                return (
+                  <CheckableTag
+                    key={i}
+                    style={{
+                      height: 'auto',
+                      fontSize: 15,
+                      padding: '7px 19px',
+                      margin: 5,
+                      color: (stars > 3 ? tags_good_selected : tags_bad_selected).indexOf(tag) === -1 && 'rgba(0, 0, 0, 0.65)',
+                      background: (stars > 3 ? tags_good_selected : tags_bad_selected).indexOf(tag) === -1 && '#eee'
+                    }}
+                    checked={(stars > 3 ? tags_good_selected : tags_bad_selected).indexOf(tag) > -1}
+                    onChange={(checked) => this.tagChange(checked, tag, stars > 3 ? 'good' : 'bad')}
+                  >
+                    {tag}
+                  </CheckableTag>
+                )
+              })
+            })()
           }
         </div>
-
-        {
-          stars > 0 &&
-            <TextArea
-              placeholder='Напишите комментарий'
-              style={{
-                position: 'absolute',
-                fontSize: 15,
-                resize: 'none',
-                padding: '5px 0',
-                margin: '0 auto',
-                maxWidth: '90%',
-                minHeight: 'auto',
-                borderRadius: 0,
-                border: 0,
-                boxSizing: 'border-box',
-                borderBottom: '2px solid #eee',
-                bottom: 70
-              }}
-              onChange={this.textareaChange}
-              autosize={{
-                maxRows: 8
-              }}
-            />
-        }
 
         {
           stars > 0 &&
@@ -184,5 +159,3 @@ class App extends Component {
     )
   }
 }
-
-export default App
