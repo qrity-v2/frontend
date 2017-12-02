@@ -12,7 +12,11 @@ class App extends Component {
   }
 
   ratingChange = (stars) => {
-    this.setState({ stars })
+    if (stars > 3) {
+      this.setState({ stars, selectedTags: [] })
+    } else {
+      this.setState({ stars })
+    }
   }
 
   tagChange = (checked, tag) => {
@@ -29,7 +33,7 @@ class App extends Component {
       this.setState(({ selectedTags }) => {
         const index = selectedTags.indexOf(tag)
 
-        delete selectedTags[index]
+        selectedTags.splice(index, 1)
 
         return {
           selectedTags
@@ -38,10 +42,20 @@ class App extends Component {
     }
   }
 
-  componentWillMount () {
-    const { name, tags } = queryString.parse(window.location.search)
+  send = () => {
+    alert('?')
+  }
 
-    this.setState({ name, tags })
+  componentWillMount () {
+    const { name, tags, stars } = queryString.parse(window.location.search) // debug only
+    // const { name, tags } = queryString.parse(window.location.search)
+
+    this.setState({ name, tags, stars }) // debug only
+    // this.setState({ name, tags })
+
+    if (name) {
+      document.title = `Отзыв о «${name}»`
+    }
   }
 
   render () {
@@ -56,14 +70,22 @@ class App extends Component {
           margin: '25px auto'
         }}
       >
-        <h1 style={{ margin: '10px 0' }}>Отзыв о «{name}»</h1>
+        <h1
+          style={{
+            margin: '10px 0',
+            fontSize: 30,
+            textAlign: 'center'
+          }}
+        >
+          Отзыв о {name ? `«${name}»` : 'заведении'}
+        </h1>
 
         <Stars
           count={5}
           onChange={this.ratingChange}
           half={false}
           value={stars}
-          size={24}
+          size={32}
           color2={'#ffd700'}
         />
 
@@ -71,6 +93,8 @@ class App extends Component {
           style={{
             display: 'flex',
             flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
             maxWidth: '320px',
             margin: '15px 0'
           }}
@@ -81,6 +105,11 @@ class App extends Component {
                 <CheckableTag
                   key={i}
                   style={{
+                    height: 'auto',
+                    fontSize: 15,
+                    padding: '7px 19px',
+                    margin: 5,
+                    color: selectedTags.indexOf(tag) === -1 && 'rgba(0, 0, 0, 0.65)',
                     background: selectedTags.indexOf(tag) === -1 && '#eee'
                   }}
                   checked={selectedTags.indexOf(tag) > -1}
@@ -92,6 +121,29 @@ class App extends Component {
             })
           }
         </div>
+
+        {
+          stars > 0 &&
+            <span
+              style={{
+                fontWeight: 500,
+                fontSize: 15,
+                position: 'absolute',
+                width: '100%',
+                padding: '18px 0',
+                color: '#fff',
+                textAlign: 'center',
+                background: '#108ee9',
+                bottom: 0,
+                borderRadius: 0
+              }}
+              onClick={this.send}
+            >
+              {
+                'Отправить'.toUpperCase()
+              }
+            </span>
+        }
       </div>
     )
   }
