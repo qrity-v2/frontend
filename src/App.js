@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import queryString from 'query-string'
 import CheckableTag from 'antd/lib/tag/CheckableTag' // optimize
+import TextArea from 'antd/lib/input/TextArea' // optimize
 import Stars from 'react-stars'
 
 class App extends Component {
@@ -8,7 +9,8 @@ class App extends Component {
     name: '',
     stars: 0,
     tags: [],
-    selectedTags: []
+    selectedTags: [],
+    comment: ''
   }
 
   ratingChange = (stars) => {
@@ -42,20 +44,30 @@ class App extends Component {
     }
   }
 
+  textareaChange = ({ target }) => {
+    const { value: comment } = target
+
+    this.setState({ comment })
+  }
+
   send = () => {
-    alert('?')
+    // Send form to API
   }
 
   componentWillMount () {
-    const { name, tags, stars } = queryString.parse(window.location.search) // debug only
-    // const { name, tags } = queryString.parse(window.location.search)
+    const query = Object.entries(queryString.parse(window.location.search))
 
-    this.setState({ name, tags, stars }) // debug only
-    // this.setState({ name, tags })
-
-    if (name) {
-      document.title = `Отзыв о «${name}»`
+    if (!query.length) {
+      return false
     }
+
+    // DEMO [only]
+    const state = Object.entries(queryString.parse(window.location.search))
+      .filter(([ key, value ]) => [ 'tags', 'name' ].indexOf(key) > -1 && value !== undefined)
+      .map(([ key, value ]) => ({ [key]: value }))
+      .reduce((a, b) => ({ ...a, ...b }))
+
+    this.setState({ ...state })
   }
 
   render () {
@@ -95,7 +107,6 @@ class App extends Component {
             flexDirection: 'row',
             flexWrap: 'wrap',
             justifyContent: 'center',
-            maxWidth: '320px',
             margin: '15px 0'
           }}
         >
@@ -121,6 +132,31 @@ class App extends Component {
             })
           }
         </div>
+
+        {
+          stars > 0 &&
+            <TextArea
+              placeholder='Напишите комментарий'
+              style={{
+                position: 'absolute',
+                fontSize: 15,
+                resize: 'none',
+                padding: '5px 0',
+                margin: '0 auto',
+                maxWidth: '90%',
+                minHeight: 'auto',
+                borderRadius: 0,
+                border: 0,
+                boxSizing: 'border-box',
+                borderBottom: '2px solid #eee',
+                bottom: 70
+              }}
+              onChange={this.textareaChange}
+              autosize={{
+                maxRows: 8
+              }}
+            />
+        }
 
         {
           stars > 0 &&

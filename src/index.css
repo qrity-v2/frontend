@@ -6,3 +6,9 @@
 body {
   height: auto;
 }
+
+input:focus,
+textarea:focus {
+  outline: 0;
+  box-shadow: none!important;
+}
