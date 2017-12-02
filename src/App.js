@@ -9,12 +9,15 @@ import json from './utils/json'
 export default class App extends Component {
   state = {
     shop_name: '',
+    user_id: 0,
+    shop_id: 0,
     stars: 0,
     tags_good: [],
     tags_good_selected: [],
     tags_bad: [],
     tags_bad_selected: [],
-    loading: false
+    loading: false,
+    bad_request: false
   }
 
   ratingChange = (stars) => {
@@ -48,6 +51,8 @@ export default class App extends Component {
 
   send = async () => {
     const {
+      user_id,
+      shop_id,
       stars: rating,
       tags_bad_selected,
       tags_good_selected
@@ -60,8 +65,8 @@ export default class App extends Component {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: queryString.stringify({
-          shop_id: 1,
-          user_id: 1,
+          shop_id,
+          user_id,
           rating,
           tags: rating > 3 ? tags_good_selected : tags_bad_selected
         })
@@ -79,7 +84,19 @@ export default class App extends Component {
   }
 
   async componentWillMount () {
-    this.setState({ loading: true })
+    const { user_id, shop_id } = queryString.parse(window.location.search)
+
+    if (!(user_id && shop_id)) {
+      return this.setState({
+        bad_request: true
+      })
+    }
+
+    this.setState({
+      loading: true,
+      user_id,
+      shop_id
+    })
 
     try {
       const { result } = await fetch('/review/params/')
@@ -99,10 +116,26 @@ export default class App extends Component {
       tags_good_selected,
       tags_bad,
       tags_bad_selected,
-      loading
+      loading,
+      bad_request
     } = this.state
 
-    if (loading) {
+    if (bad_request) {
+      return (
+        <div
+          style={{
+            height: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <h1>
+            Не был передан shop_id & user_id.
+          </h1>
+        </div>
+      )
+    } else if (loading) {
       return (
         <div
           style={{
