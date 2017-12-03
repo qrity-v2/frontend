@@ -98,7 +98,7 @@ export default class App extends Component {
     })
 
     try {
-      const { result } = await fetch('/review/params/')
+      const { result } = await fetch('/review/params/?' + queryString.stringify({ user_id, shop_id }))
         .then(status).then(json)
 
       this.setState({ ...result, loading: false })
@@ -136,7 +136,50 @@ export default class App extends Component {
               if (bad_request) {
                 return <h1>Не найдено.</h1>
               } else if (success) {
-                return <h1>Отзыв отправлен.</h1>
+                if (stars <= 3) {
+                  return <h1>Отзыв отправлен.</h1>
+                }
+
+                return (
+                  <div>
+                    <h1 style={{ textAlign: 'center' }}>Отзыв отправлен.</h1>
+                    <h1 style={{ textAlign: 'center', margin: '25px 0' }}>Вы можете поблагодарить нас в соц. сетях:</h1>
+
+                    {
+                      [{
+                        url: 'https://vk.com/starbucks',
+                        title: 'ВКонтакте'
+                      }, {
+                        url: 'https://www.instagram.com/26_sverdlova/',
+                        title: 'Instagram'
+                      }, {
+                        url: 'https://ru-ru.facebook.com/escobaryalta/',
+                        title: 'Facebook'
+                      }].map(({ url, title }, i) => {
+                        return (
+                          <a
+                            href={url}
+                            target='_blank'
+                            style={{
+                              fontWeight: 500,
+                              padding: '9px 15px',
+                              fontSize: 16,
+                              display: 'block',
+                              margin: '10px auto',
+                              textAlign: 'center',
+                              width: 150,
+                              background: '#108ee9',
+                              borderRadius: 4,
+                              color: '#fff'
+                            }}
+                          >
+                            {title}
+                          </a>
+                        )
+                      })
+                    }
+                  </div>
+                )
               } else if (error) {
                 return <h1>Произошла ошибка.</h1>
               } else if (loading) {
